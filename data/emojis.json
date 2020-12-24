@@ -1,0 +1,17 @@
+{
+    "emoji-server": 698481204604698665,
+    "emojis": {
+        "check": {
+            "default": 698481478451068959,
+            "replace": "✅"
+        },
+        "cross": {
+            "default": 698482692043571311,
+            "replace": "❌"
+        }
+        "loading": {
+            "default": 703166128465117195,
+            "replace": "..."
+        }
+    }
+}
