@@ -7,6 +7,10 @@ from utils import rchatmgr
 from datetime import timedelta
 import time
 import math
+from typing import Optional
+from itertools import cycle
+import random
+from db import randnick
 
 class MainCmds(BaseCog):
     def __init__(self, bot):
@@ -14,18 +18,27 @@ class MainCmds(BaseCog):
 
     @commands.dm_only()
     @commands.command(name='랜덤채팅')
-    async def _randchat(self, ctx: commands.Context):
+    async def _randchat(self, ctx: commands.Context, count: Optional[int]=2):
+        if not 2 <= count:
+            await ctx.send(
+                embed=discord.Embed(
+                    title="❗ 인원수는 최소 2명입니다!",
+                    description="인원수는 자신도 포함한 수입니다!",
+                    color=colors.ERROR
+                )
+            )
+
         msg = await ctx.send(
             embed=discord.Embed(
                 title='💬 개인 랜덤채팅 매칭을 시작할까요?',
-                description='랜덤채팅 상대에게 내 태그를 제외한 닉네임이 표시됩니다.',
+                description='**채팅 모드를 선택하세요:**\n\n🏷: **일반 모드**\n> 이름과 태그가 표시됩니다.\n\n❔: **익명 모드**\n> 이름과 태그 대신 랜덤으로 생성한 닉네임을 사용합니다.',
                 color=colors.PRIMARY
             )
         )
 
         checkemj = self.emj.get(ctx, 'check')
         crossemj = self.emj.get(ctx, 'cross')
-        emjs = checkemj, crossemj
+        emjs = '🏷', '❔', crossemj
 
         for emj in emjs:
             await msg.add_reaction(emj)
@@ -38,14 +51,21 @@ class MainCmds(BaseCog):
             except: pass
         else:
             await msg.delete()
-            if reaction.emoji == checkemj:
+            if reaction.emoji != crossemj:
                 if self.rmgr.is_in_queue(ctx.author.id):
                     return
+
+                if reaction.emoji == '❔':
+                    altnick = ' '.join([random.choice(randnick.FIRST), random.choice(randnick.LAST)])
+                else:
+                    altnick = None
+
+                rainbow = cycle(map(lambda x: x/35, range(0, 36)))
 
                 def get_matching_embed(time_elapsed_seconds: float=None):
                     embed = discord.Embed(
                         title='{} 채팅 상대를 매칭 중입니다...'.format(self.emj.get(ctx, "loading")),
-                        color=colors.PRIMARY
+                        color=discord.Color.from_hsv(next(rainbow), 1, 0.9)
                     )
 
                     footermsg = '❌ 로 반응해 매칭을 취소할 수 있습니다.'
@@ -81,7 +101,7 @@ class MainCmds(BaseCog):
                 time_counter_task = asyncio.create_task(time_elapsed_counter())
                     
                 try:
-                    match = await self.rmgr.start_match(ctx.author.id, count=2, timeout=5*60)
+                    match = await self.rmgr.start_match(ctx.author.id, count=count-1, altnick=altnick, timeout=5*60)
                 except asyncio.TimeoutError:
                     cancel_task.cancel()
                     time_counter_task.cancel()
@@ -113,13 +133,13 @@ class MainCmds(BaseCog):
                     try:
                         await matchmsg.delete()
                     finally:
-                        members = "`" + "`님, `".join(str(self.bot.get_user(o)) for o in match if o != ctx.author.id) + "`"
+                        members = "`" + "`님, `".join((o.altnick + (' (나)' if o.uid == ctx.author.id else '')) or str(self.bot.get_user(o.uid)) for o in match if o != ctx.author.id) + "`"
                         await ctx.send(
                             embed=discord.Embed(
                                 title=f'{checkemj} 매칭됐습니다!',
                                 description=members + '와(과) 매칭되었습니다.',
                                 color=colors.SUCCESS
-                            )
+                            ).set_footer(text=f'{self.bot.command_prefix}나가기 명령으로 랜덤채팅에서 나갈 수 있습니다.')
                         )
 
 def setup(bot):

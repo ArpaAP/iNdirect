@@ -4,6 +4,7 @@ import os
 import json
 from utils.emojimgr import EmojiMgr
 from utils.rchatmgr import RandchatMgr
+from utils import checks
 
 from data import configs, masters
 
@@ -20,12 +21,7 @@ with open('./data/emojis.json', 'r', encoding='utf-8') as emojifile:
 bot = commands.Bot(command_prefix=';', status=discord.Status.dnd, activity=discord.Game('iNdirect 시작'))
 bot.remove_command('help')
 
-async def master_only(ctx):
-    if ctx.author.id in masters.MASTERS:
-        return True
-    raise commands.NotOwner()
-
-bot.add_check(master_only)
+bot.add_check(checks.master_only)
 
 rmgr = RandchatMgr()
 rmgr.start_match_task()

@@ -2,8 +2,10 @@ import discord
 from discord.ext import commands
 import asyncio
 from utils.basecog import BaseCog
+from utils.rchatmgr import MatchItem
 from data import colors
 import traceback
+from typing import List
 
 class Events(BaseCog):
     def __init__(self, bot):
@@ -17,32 +19,46 @@ class Events(BaseCog):
 
     async def on_message(self, message: discord.Message):
         if self.rmgr.is_matched(message.author.id):
-            match: list = self.rmgr.get_matched(message.author.id)
-            match.remove(message.author.id)
+            match: List[MatchItem] = self.rmgr.get_matched(message.author.id)
+            mymatch = next((m for m in match if m.uid == message.author.id), None)
+            match.remove(mymatch)
 
             if message.content == f'{self.bot.command_prefix}나가기':
                 self.rmgr.exit_match(message.author.id)
                 await message.author.send(
                     embed=discord.Embed(
-                        title="↩ 랜덤 채팅을 종료했습니다!",
+                        title="↩ 랜덤 채팅을 나갔습니다!",
                         color=colors.SUCCESS
                     )
                 )
 
-                for one in map(self.bot.get_user, match):
-                    asyncio.create_task(
+                await asyncio.gather(
+                    *(
                         one.send(
                             embed=discord.Embed(
-                                description=f"**`{message.author}` 님이 채팅을 종료했습니다!**",
-                                color=colors.PRIMARY
+                                description=f"**`{message.author}` 님이 채팅을 나갔습니다!**",
+                                color=colors.WARN
                             )
+                        )
+                        for one in map(self.bot.get_user, map(lambda x: x.uid, match))
+                    ),
+                    return_exceptions=True
+                )
+
+                if len(match) == 1:
+                    await self.bot.get_user(match[0].uid).send(
+                        embed=discord.Embed(
+                            description="대화 상대가 모두 나가 랜덤채팅이 종료되었습니다.",
+                            color=colors.PRIMARY
                         )
                     )
 
                 return
 
-            for one in map(self.bot.get_user, match):
-                asyncio.create_task(one.send(message.content))
+            await asyncio.gather(
+                *(one.send('**[{}]** {}'.format(mymatch.altnick or message.author, message.content)) for one in map(self.bot.get_user, map(lambda x: x.uid, match))),
+                return_exceptions=True
+            )
         
         else:
             await self.bot.process_commands(message)
@@ -57,6 +73,7 @@ class Events(BaseCog):
                     color=colors.ERROR
                 )
             )
+
         elif isinstance(error, commands.NotOwner):
             await ctx.send(
                 embed=discord.Embed(
@@ -65,8 +82,10 @@ class Events(BaseCog):
                     color=colors.ERROR
                 )
             )
+
         elif isinstance(error, commands.CommandNotFound):
             pass
+
         else:
             tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
             print(tb)
