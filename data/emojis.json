@@ -8,7 +8,7 @@
         "cross": {
             "default": 698482692043571311,
             "replace": "❌"
-        }
+        },
         "loading": {
             "default": 703166128465117195,
             "replace": "..."
