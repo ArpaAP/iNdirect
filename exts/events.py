@@ -18,42 +18,10 @@ class Events(BaseCog):
         await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(';도움 입력'))
 
     async def on_message(self, message: discord.Message):
-        if self.rmgr.is_matched(message.author.id):
+        if isinstance(message.channel, discord.DMChannel) and self.rmgr.is_matched(message.author.id) and message.content[1:] not in ['나가기', '참여자']:
             match: List[MatchItem] = self.rmgr.get_matched(message.author.id)
             mymatch = next((m for m in match if m.uid == message.author.id), None)
             match.remove(mymatch)
-
-            if message.content == f'{self.bot.command_prefix}나가기':
-                self.rmgr.exit_match(message.author.id)
-                await message.author.send(
-                    embed=discord.Embed(
-                        title="↩ 랜덤 채팅을 나갔습니다!",
-                        color=colors.SUCCESS
-                    )
-                )
-
-                await asyncio.gather(
-                    *(
-                        one.send(
-                            embed=discord.Embed(
-                                description=f"**`{message.author}` 님이 채팅을 나갔습니다!**",
-                                color=colors.WARN
-                            )
-                        )
-                        for one in map(self.bot.get_user, map(lambda x: x.uid, match))
-                    ),
-                    return_exceptions=True
-                )
-
-                if len(match) == 1:
-                    await self.bot.get_user(match[0].uid).send(
-                        embed=discord.Embed(
-                            description="대화 상대가 모두 나가 랜덤채팅이 종료되었습니다.",
-                            color=colors.PRIMARY
-                        )
-                    )
-
-                return
 
             await asyncio.gather(
                 *(one.send('**[{}]** {}'.format(mymatch.altnick or message.author, message.content)) for one in map(self.bot.get_user, map(lambda x: x.uid, match))),

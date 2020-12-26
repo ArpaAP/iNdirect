@@ -21,7 +21,7 @@ with open('./data/emojis.json', 'r', encoding='utf-8') as emojifile:
 bot = commands.Bot(command_prefix=';', status=discord.Status.dnd, activity=discord.Game('iNdirect 시작'))
 bot.remove_command('help')
 
-bot.add_check(checks.master_only)
+bot.add_check(checks.not_bot)
 
 rmgr = RandchatMgr()
 rmgr.start_match_task()

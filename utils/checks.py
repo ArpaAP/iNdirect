@@ -8,3 +8,8 @@ async def master_only(ctx):
 
 def is_master():
     return commands.check(master_only)
+
+async def not_bot(ctx):
+    if not ctx.author.bot:
+        return True
+    raise commands.CheckFailure

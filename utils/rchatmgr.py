@@ -32,10 +32,16 @@ class QueueItem:
         self.cancel = cancel
         self.altnick = altnick
 
+    def __eq__(self, other):
+        return self.count == other.count and self.cancel == other.cancel and self.altnick == other.altnick
+
 class MatchItem:
     def __init__(self, uid, altnick: Optional[str]):
         self.uid = uid
         self.altnick = altnick
+
+    def __eq__(self, other):
+        return self.uid == other.uid and self.altnick == other.altnick
 
 class RandchatMgr:
     def __init__(self):
@@ -105,8 +111,11 @@ class RandchatMgr:
 
     def exit_match(self, uid):
         matched = self.get_matched(uid)
+        mymatchindex = self.__matches.index(next((x for x in self.__matches if x == matched), None))
+        mymatchitem = next((x for x in matched if x.uid == uid), None)
+        mymatchitemindex = matched.index(next((x for x in matched if x == mymatchitem), None))
 
         if len(matched) > 2:
-            self.__matches[self.__matches.index(matched)].remove(uid)
+            del self.__matches[mymatchindex][mymatchitemindex]
         else:
-            self.__matches.remove(matched)
+            del self.__matches[mymatchindex]
