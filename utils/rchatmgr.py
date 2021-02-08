@@ -79,6 +79,7 @@ class RandchatMgr:
     @tasks.loop()
     async def match(self):
         try:
+            await asyncio.sleep(1)
             if not self.__queue:
                 return
 
