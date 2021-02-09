@@ -67,7 +67,7 @@ class RandchatMgr:
             if uid not in self.__queue:
                 if uid not in (y.uid for x in self.__matches for y in x):
                     raise MatchCanceled
-            await asyncio.sleep(0)
+            await asyncio.sleep(1)
 
     def cancel_match(self, uid):
         if uid in self.__queue:
