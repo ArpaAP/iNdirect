@@ -54,7 +54,7 @@ class RandchatMgr:
     async def start_match(self, uid, *, count: int=1, altnick: str=None, timeout: float):
         if uid in self.__queue:
             raise UserAlreadyInQueue(uid)
-        if uid in chain.from_iterable(self.__matches):
+        if uid in map(lambda x: x.uid, chain.from_iterable(self.__matches)):
             raise UserAlreadyMatched(uid)
         self.__queue[uid] = QueueItem(count, False, altnick)
         return await asyncio.wait_for(self.wait_for_match(uid), timeout=timeout)
@@ -92,6 +92,7 @@ class RandchatMgr:
                     match.append(MatchItem(x, self.__queue[x].altnick))
                     del self.__queue[x]
                 self.__matches.append(match)
+                del self.__queue[uid]
         except:
             traceback.print_exc()
 

@@ -114,6 +114,7 @@ class MainCmds(BaseCog):
                                 color=colors.ERROR
                             )
                         )
+
                 except rchatmgr.MatchCanceled:
                     cancel_task.cancel()
                     time_counter_task.cancel()
@@ -141,6 +142,10 @@ class MainCmds(BaseCog):
                                 color=colors.SUCCESS
                             ).set_footer(text=f'{self.bot.command_prefix}나가기 명령으로 랜덤채팅에서 나갈 수 있습니다.')
                         )
+
+                finally:
+                    cancel_task.cancel()
+                    time_counter_task.cancel()
 
     @commands.dm_only()
     @commands.command(name="나가기")
