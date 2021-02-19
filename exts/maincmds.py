@@ -36,8 +36,8 @@ class MainCmds(BaseCog):
             ).set_footer(text="❌ 를 클릭해 취소합니다.")
         )
 
-        checkemj = self.emj.get(ctx, 'check')
-        crossemj = self.emj.get(ctx, 'cross')
+        checkemj = '✅'
+        crossemj = '❌'
         emjs = '🏷', '❔', crossemj
 
         for emj in emjs:
